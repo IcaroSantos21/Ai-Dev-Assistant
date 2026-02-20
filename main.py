@@ -43,15 +43,27 @@ def pegar_entrada_multilinha():
         linhas.append(linha)
     return "\n".join(linhas)
 
+def listar_arquivos() -> str:
+    """Listar todos os arquivos e pastas dentro do workspace"""
+    arquivos = []
+    for root, dirs, files in os.walk(WORKSPACE):
+        for f in files:
+            # Cria um caminho relativo para facilitar a leitura da IA
+            rel_path = os.path.relpath(os.path.join(root, f), WORKSPACE)
+            arquivos.append(rel_path)
+    return "\n".join(arquivos) if arquivos else "O Workspace está vazio"
+
 # --- 3. INICIALIZAÇÃO DO AGENTE ---
 client = genai.Client(api_key=API_KEY)
 
 # Configura o "Cérebro" e as Ferramentas
 config = types.GenerateContentConfig(
-    system_instruction="""Você é um Agente Programador Sênior. 
-    Sempre use a função 'salvar_codigo' para entregar códigos prontos.
-    Se o usuário pedir para revisar um código, use 'ler_codigo' primeiro.
-    Seja conciso e técnico.""",
+    system_instruction="""Você é um Engenheiro de Software Sênior especialista em Debugging e Refatoração.
+Ao analisar códigos existentes:
+1. Identifique gargalos de performance e riscos de segurança.
+2. Sugira melhorias seguindo Clean Code e SOLID.
+3. Se o usuário reportar um erro, use 'ler_codigo' para entender o contexto antes de propor a correção.
+4. Sempre explique o PORQUÊ das mudanças antes de aplicar a refatoração com 'salvar_codigo'.""",
     tools=[salvar_codigo, ler_codigo],
     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=False)
 )
